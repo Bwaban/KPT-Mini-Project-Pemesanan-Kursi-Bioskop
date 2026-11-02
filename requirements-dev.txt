@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# Automated tests and performance benchmark tooling
+pytest>=8,<9
+numpy>=1.26,<3
+matplotlib>=3.8,<4

@@ -4,6 +4,9 @@ __pycache__/
 *.py[cod]
 proto/bioskop_pb2.py
 proto/bioskop_pb2_grpc.py
+benchmarks/hasil_benchmark.csv
+benchmarks/hasil_benchmark.json
+benchmarks/grafik_kinerja_kpt.png
 .env
 .idea/
 .vscode/

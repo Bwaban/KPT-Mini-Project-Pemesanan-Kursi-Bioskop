@@ -94,7 +94,7 @@ function updateSelection() {
 
 function renderBookings() {
   const bookings = localBookings();
-  bookingCount.textContent = bookings.length;
+  bookingCount.textContent = `${bookings.length} tiket`;
   bookingList.replaceChildren();
   if (!bookings.length) {
     const empty = document.createElement('p');

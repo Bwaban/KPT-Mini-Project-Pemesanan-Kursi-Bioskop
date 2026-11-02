@@ -139,11 +139,23 @@ Proyek ini dilengkapi dengan rangkaian pengujian unit dan integrasi terotomasi m
 
 ### 2. Menjalankan Rangkaian Pengujian
 
-Jalankan perintah berikut menggunakan lingkungan virtualenv proyek:
+Pasang dependency pengujian dan benchmark sekali dari folder proyek:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+```
+
+Lalu jalankan seluruh test suite:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests -v
+```
+
+Di macOS/Linux, gunakan perintah berikut:
 
 ```bash
-# Menjalankan seluruh test suite dengan rincian verbose
-./.venv/bin/pytest tests/ -v
+python -m pip install -r requirements-dev.txt
+python -m pytest tests -v
 ```
 
 ---
@@ -164,33 +176,17 @@ Skrip benchmark telah didesain mandiri (*self-contained*), secara otomatis mengi
 ./.venv/bin/python benchmarks/benchmark.py --target 127.0.0.1:50051 --requests 200
 ```
 
+Di Windows PowerShell, jalankan:
+
+```powershell
+.\.venv\Scripts\python.exe benchmarks\benchmark.py
+```
+
 Skrip akan secara otomatis menghasilkan:
 1. Rekapitulasi metrik ke terminal (stdout).
 2. Data tabular ke `benchmarks/hasil_benchmark.csv`.
 3. Dokumen terstruktur JSON berserta metadata timestamp ke `benchmarks/hasil_benchmark.json`.
 4. Grafik visual komparatif beresolusi tinggi ke `benchmarks/grafik_kinerja_kpt.png`.
-
-### 2. Ringkasan Hasil Pengujian Kinerja
-
-Berikut adalah rekapitulasi data hasil pengujian kinerja beban gRPC:
-
-| Concurrency (Client) | Total Request | Durasi Eksekusi | Throughput (req/s) | Latensi Rata-rata (ms) | Median / p50 (ms) | Latensi p95 (ms) | Latensi p99 (ms) | Error Rate |
-| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **1 Client** | 160 req | ~0.098 s | **1639.79 req/s** | 0.60 ms | 0.58 ms | 0.78 ms | 0.86 ms | **0.0%** |
-| **5 Client** | 160 req | ~0.109 s | **1465.18 req/s** | 3.27 ms | 3.11 ms | 5.16 ms | 7.15 ms | **0.0%** |
-| **20 Client** | 160 req | ~0.114 s | **1399.71 req/s** | 12.73 ms | 11.17 ms | 23.43 ms | 29.25 ms | **0.0%** |
-
-### 3. Analisis & Interpretasi Hasil
-
-1. **Efisiensi Protokol & Throughput:**
-   - Protokol biner gRPC (HTTP/2 multiplexing + Protobuf) memberikan efisiensi sangat tinggi di mana throughput stabil di atas **1300–1600 request per detik** pada seluruh skenario.
-2. **Karakteristik Latensi terhadap Skalabilitas Beban:**
-   - Pada beban **1 client**, latensi berada pada level sub-milidetik (**0.60 ms**).
-   - Saat konkurensi ditingkatkan hingga **20 client**, latensi rata-rata naik secara proporsional menjadi **12.73 ms** dan latensi p95 mencapai **23.43 ms**. Kenaikan ini adalah perilaku wajar (*queuing delay*) akibat proteksi *critical section* (`threading.Condition`) yang menjaga integritas data tanpa korupsi (*zero data corruption*).
-3. **Keandalan & Integritas Data:**
-   - Pada semua level pengujian beban, tingkat kegagalan transaksi tak terduga (*error rate*) tercatat **0.0%**. Seluruh perebutan kursi tertangani secara konsisten dan terprediksi.
-
-![Grafik Kinerja Beban gRPC](benchmarks/grafik_kinerja_kpt.png)
 
 ## Catatan batasan prototipe
 

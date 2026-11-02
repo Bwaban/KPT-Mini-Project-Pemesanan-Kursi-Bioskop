@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10131d">
   <title>Bioskop Kita — Reservasi Kursi</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=layout-final-preview">
 </head>
 <body>
   <main class="page-shell">
@@ -58,13 +58,20 @@
         <div class="price-row"><span>Total tiket</span><strong id="ticket-total">Rp 0</strong></div>
         <button id="book-button" class="book-button" disabled>Pesan kursi <span>→</span></button>
         <p class="note">Kursi dikonfirmasi setelah pemesanan berhasil.</p>
-        <div class="my-bookings"><div class="my-bookings-heading"><h3>Pesanan saya</h3><span id="booking-count">0</span></div><div id="booking-list" class="booking-list"><p class="empty-bookings">Belum ada pesanan di perangkat ini.</p></div></div>
       </aside>
+    </section>
+
+    <section class="orders-section" aria-labelledby="orders-title">
+      <div class="orders-heading">
+        <div><p class="eyebrow">RIWAYAT PEMESANAN</p><h2 id="orders-title">Pesanan saya</h2></div>
+        <span id="booking-count" class="orders-count">0 tiket</span>
+      </div>
+      <div id="booking-list" class="booking-list"><p class="empty-bookings">Belum ada pesanan di perangkat ini.</p></div>
     </section>
 
     <footer><span>BIOSKOP KITA</span><span>Satu studio · Status kursi real-time</span></footer>
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="/app.js" defer></script>
+  <script src="/app.js?v=layout-20261102" defer></script>
 </body>
 </html>
