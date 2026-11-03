@@ -188,6 +188,20 @@ Skrip akan secara otomatis menghasilkan:
 3. Dokumen terstruktur JSON berserta metadata timestamp ke `benchmarks/hasil_benchmark.json`.
 4. Grafik visual komparatif beresolusi tinggi ke `benchmarks/grafik_kinerja_kpt.png`.
 
+### Hasil benchmark
+
+Benchmark lokal dijalankan dengan 160 permintaan per skenario. Hasilnya:
+
+| Klien bersamaan | Throughput (req/s) | Rata-rata (ms) | p95 (ms) | p99 (ms) | Error |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 3.138,69 | 0,31 | 0,40 | 0,49 | 0% |
+| 5 | 3.649,30 | 1,31 | 1,87 | 2,53 | 0% |
+| 20 | 3.126,07 | 5,67 | 9,70 | 14,33 | 0% |
+
+![Grafik hasil benchmark](benchmarks/grafik_kinerja_kpt.png)
+
+Pada pengukuran ini, semua skenario selesai tanpa error. Latensi rata-rata dan p95 meningkat saat jumlah klien bertambah; throughput tertinggi tercatat pada 5 klien. Angka ini adalah satu kali pengukuran lokal, sehingga dapat berbeda pada perangkat atau saat pengujian diulang.
+
 ## Catatan batasan prototipe
 
 Status dan deduplikasi disimpan di memori. Restart server akan menghapus pesanan dan riwayat request ID. Ini cukup untuk demo concurrency satu server; persistensi database dan deduplikasi lintas restart dapat ditambahkan sebagai pengembangan lanjutan.

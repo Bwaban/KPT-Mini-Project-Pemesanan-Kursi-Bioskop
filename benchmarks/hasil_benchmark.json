@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-11-03T14:03:32.219276",
+  "proyek": "Sistem Reservasi Kursi Bioskop Terdistribusi Berbasis gRPC",
+  "benchmark_scenarios": [
+    {
+      "concurrency": 1,
+      "total_requests": 160,
+      "duration_seconds": 0.051,
+      "throughput_req_per_sec": 3138.69,
+      "latency_avg_ms": 0.314,
+      "latency_min_ms": 0.214,
+      "latency_max_ms": 2.782,
+      "latency_p50_ms": 0.289,
+      "latency_p95_ms": 0.402,
+      "latency_p99_ms": 0.491,
+      "error_count": 0,
+      "error_rate_pct": 0.0
+    },
+    {
+      "concurrency": 5,
+      "total_requests": 160,
+      "duration_seconds": 0.0438,
+      "throughput_req_per_sec": 3649.3,
+      "latency_avg_ms": 1.312,
+      "latency_min_ms": 0.601,
+      "latency_max_ms": 2.975,
+      "latency_p50_ms": 1.281,
+      "latency_p95_ms": 1.871,
+      "latency_p99_ms": 2.532,
+      "error_count": 0,
+      "error_rate_pct": 0.0
+    },
+    {
+      "concurrency": 20,
+      "total_requests": 160,
+      "duration_seconds": 0.0512,
+      "throughput_req_per_sec": 3126.07,
+      "latency_avg_ms": 5.668,
+      "latency_min_ms": 1.061,
+      "latency_max_ms": 18.256,
+      "latency_p50_ms": 5.384,
+      "latency_p95_ms": 9.702,
+      "latency_p99_ms": 14.331,
+      "error_count": 0,
+      "error_rate_pct": 0.0
+    }
+  ]
+}
