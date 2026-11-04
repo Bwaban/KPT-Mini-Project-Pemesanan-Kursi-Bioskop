@@ -208,6 +208,10 @@ Pada pengukuran ini, semua skenario selesai tanpa error. Latensi rata-rata dan p
 - **Kepemilikan pembatalan:** `BatalkanPesananRequest` punya field opsional `nama_pemesan`. Kalau diisi dan tidak cocok dengan nama pemesan, pembatalan ditolak ("Pesanan ini milik pemesan lain"). Frontend selalu mengirim nama dari pesanan tersimpan; client gRPC lama yang tidak mengirim nama tetap diizinkan (kompatibel ke belakang).
 - **Healthcheck:** `GET /api/health` mengembalikan `{"status": "ok", ...}` kalau gateway bisa mencapai server gRPC, 503 kalau tidak. Compose memakai endpoint ini sebagai healthcheck service `web`.
 
+### Benchmark langsung dari web (demo)
+
+Halaman utama punya section **Benchmark gRPC**: tombol "Jalankan benchmark" memanggil `POST /api/benchmark`, yang menjalankan skenario 1, 5, dan 20 client (100 request per skenario, 70% baca / 30% tulis) lalu menampilkan throughput dan latensi (rata-rata, p50, p95, p99) per skenario. Benchmark berjalan pada server gRPC terisolasi yang dibuat khusus per skenario — kursi demo, pesanan, dan database tidak berubah. Implementasinya di `benchmarks/web_benchmark.py` (murni stdlib + gRPC, tanpa numpy/matplotlib, supaya gateway tidak butuh dependensi baru); dua benchmark yang bersamaan ditolak dengan 409.
+
 ### Deploy dengan Docker Compose
 
 ```bash

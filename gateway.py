@@ -2,6 +2,7 @@
 
 import json
 import os
+import threading
 import time
 import uuid
 
@@ -10,6 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
+from benchmarks.web_benchmark import run_web_benchmark
 from proto import bioskop_pb2 as pb
 from proto import bioskop_pb2_grpc as rpc
 
@@ -71,6 +73,28 @@ def health():
         return {"status": "ok", "kursi": len(response.kursi), "versi": response.versi}
     except grpc.RpcError as error:
         raise HTTPException(status_code=503, detail=f"server gRPC tidak terjangkau: {error.code().name}")
+
+
+_benchmark_lock = threading.Lock()
+
+
+@app.post("/api/benchmark")
+def jalankan_benchmark():
+    """Benchmark demo: server terisolasi, kursi live tidak berubah."""
+    if not _benchmark_lock.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="Benchmark sedang berjalan, coba lagi sebentar")
+    try:
+        scenarios = run_web_benchmark(total_requests=100)
+    except Exception as error:  # jangan bocorkan traceback ke client
+        raise HTTPException(status_code=500, detail=f"Benchmark gagal: {error}")
+    finally:
+        _benchmark_lock.release()
+    return {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "isolated": True,
+        "note": "Dijalankan pada server gRPC terisolasi (bukan server live); kursi demo tidak berubah.",
+        "scenarios": scenarios,
+    }
 
 
 @app.get("/")

@@ -206,3 +206,35 @@ nameInput.addEventListener('input', updateSelection);
 renderBookings();
 loadSeats();
 connectSeatUpdates();
+
+const benchButton = document.querySelector('#bench-button');
+const benchResult = document.querySelector('#bench-result');
+
+async function runBenchmark() {
+  if (!benchButton || !benchResult) return;
+  benchButton.disabled = true;
+  benchButton.textContent = 'Menguji… (beberapa detik)';
+  benchResult.innerHTML = '<p class="empty-bookings">Menjalankan 1, 5, dan 20 client simultan…</p>';
+  try {
+    const response = await fetch('/api/benchmark', { method: 'POST' });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || 'Benchmark gagal.');
+    const maxThroughput = Math.max(...result.scenarios.map(s => s.throughput_req_per_sec), 1);
+    benchResult.innerHTML = result.scenarios.map(s => `
+      <article class="bench-card">
+        <h3>${s.concurrency} client simultan</h3>
+        <p><strong>${s.throughput_req_per_sec} req/detik</strong> · ${s.total_requests} request dalam ${s.duration_seconds} dtk · error ${s.error_rate_pct}%</p>
+        <p>Latensi rata-rata ${s.latency_avg_ms} ms · p50 ${s.latency_p50_ms} ms · p95 ${s.latency_p95_ms} ms · p99 ${s.latency_p99_ms} ms</p>
+        <div class="bench-bar"><i style="width:${Math.round(s.throughput_req_per_sec / maxThroughput * 100)}%"></i></div>
+      </article>`).join('')
+      + `<p class="bench-note">${result.note}</p>`;
+  } catch (error) {
+    benchResult.innerHTML = `<p class="empty-bookings">${error.message || 'Benchmark gagal.'}</p>`;
+    showToast(error.message || 'Benchmark gagal.', true);
+  } finally {
+    benchButton.disabled = false;
+    benchButton.textContent = 'Jalankan benchmark';
+  }
+}
+
+if (benchButton) benchButton.addEventListener('click', runBenchmark);

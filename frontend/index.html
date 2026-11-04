@@ -69,6 +69,15 @@
       <div id="booking-list" class="booking-list"><p class="empty-bookings">Belum ada pesanan di perangkat ini.</p></div>
     </section>
 
+    <section class="bench-section" aria-labelledby="bench-title">
+      <div class="orders-heading">
+        <div><p class="eyebrow">DEMO KINERJA</p><h2 id="bench-title">Benchmark gRPC</h2></div>
+        <button id="bench-button" class="bench-button">Jalankan benchmark</button>
+      </div>
+      <p class="bench-note">Menguji 1, 5, dan 20 client simultan (100 request per skenario, 70% baca / 30% tulis). Benchmark berjalan pada server terisolasi — kursi demo dan pesananmu tidak berubah.</p>
+      <div id="bench-result" class="bench-result"><p class="empty-bookings">Belum ada hasil. Tekan tombol di atas untuk demo live.</p></div>
+    </section>
+
     <footer><span>BIOSKOP KITA</span><span>Satu studio · Status kursi real-time</span></footer>
   </main>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
