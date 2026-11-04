@@ -238,7 +238,7 @@ body .page-shell .orders-section .booking-list{grid-template-columns:repeat(auto
 
 /* Benchmark section (demo) */
 .bench-section{margin-top:18px;padding:23px 26px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#191d29,#151923)}
-.bench-button{height:38px;padding:0 16px;border:0;border-radius:10px;background:var(--accent);color:#171c12;font-weight:700;font-size:12px;cursor:pointer}
+.bench-button{height:38px;padding:0 16px;border:1px solid #e6ff9e;border-radius:10px;background:#d8ff7a;color:#10131d;font-weight:800;font-size:12px;cursor:pointer;box-shadow:0 4px 18px #c5f36655}
 .bench-button:disabled{opacity:.42;cursor:not-allowed}
 .bench-note{color:var(--muted);font-size:12px;line-height:1.6;max-width:720px}
 .bench-result{margin-top:16px;display:grid;gap:12px}
