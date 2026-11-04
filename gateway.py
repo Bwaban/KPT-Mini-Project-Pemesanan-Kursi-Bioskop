@@ -2,6 +2,7 @@
 
 import json
 import os
+import threading
 import time
 import uuid
 
@@ -10,6 +11,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
+from benchmarks.web_benchmark import run_web_benchmark
 from proto import bioskop_pb2 as pb
 from proto import bioskop_pb2_grpc as rpc
 
@@ -36,6 +38,7 @@ class PesanBanyakBody(BaseModel):
 class BatalBody(BaseModel):
     request_id: str
     booking_id: str
+    nama_pemesan: str = ""
 
 
 def panggil_dengan_retry(method, request, timeout=2.0, attempts=3):
@@ -61,6 +64,37 @@ def serialisasi_kursi(kursi):
         {"id": k.id, "baris": k.baris, "nomor": k.nomor, "tersedia": k.tersedia}
         for k in kursi
     ]
+
+
+@app.get("/api/health")
+def health():
+    try:
+        response = stub.LihatKursi(pb.LihatKursiRequest(), timeout=2.0)
+        return {"status": "ok", "kursi": len(response.kursi), "versi": response.versi}
+    except grpc.RpcError as error:
+        raise HTTPException(status_code=503, detail=f"server gRPC tidak terjangkau: {error.code().name}")
+
+
+_benchmark_lock = threading.Lock()
+
+
+@app.post("/api/benchmark")
+def jalankan_benchmark():
+    """Benchmark demo: server terisolasi, kursi live tidak berubah."""
+    if not _benchmark_lock.acquire(blocking=False):
+        raise HTTPException(status_code=409, detail="Benchmark sedang berjalan, coba lagi sebentar")
+    try:
+        scenarios = run_web_benchmark(total_requests=100)
+    except Exception as error:  # jangan bocorkan traceback ke client
+        raise HTTPException(status_code=500, detail=f"Benchmark gagal: {error}")
+    finally:
+        _benchmark_lock.release()
+    return {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "isolated": True,
+        "note": "Dijalankan pada server gRPC terisolasi (bukan server live); kursi demo tidak berubah.",
+        "scenarios": scenarios,
+    }
 
 
 @app.get("/")
@@ -114,7 +148,9 @@ def pesan_beberapa_kursi(body: PesanBanyakBody):
 
 @app.post("/api/cancel")
 def batalkan_pesanan(body: BatalBody):
-    request = pb.BatalkanPesananRequest(request_id=body.request_id, booking_id=body.booking_id)
+    request = pb.BatalkanPesananRequest(
+        request_id=body.request_id, booking_id=body.booking_id, nama_pemesan=body.nama_pemesan
+    )
     try:
         result = panggil_dengan_retry(stub.BatalkanPesanan, request)
         return {"sukses": result.sukses, "pesan": result.pesan, "booking_id": result.booking_id, "kursi_id": result.kursi_id}
@@ -125,13 +161,18 @@ def batalkan_pesanan(body: BatalBody):
 @app.get("/api/stream")
 def pantau_kursi():
     def kirim_event():
+        call = stub.PantauKursi(pb.PantauKursiRequest())
         try:
-            for pembaruan in stub.PantauKursi(pb.PantauKursiRequest()):
+            for pembaruan in call:
                 payload = {"kursi": serialisasi_kursi(pembaruan.kursi), "versi": pembaruan.versi}
                 yield f"id: {pembaruan.versi}\nevent: seats\ndata: {json.dumps(payload)}\n\n"
         except grpc.RpcError:
             # EventSource will reconnect and open a fresh gRPC stream.
             return
+        finally:
+            # Penting: tanpa cancel, stream server tetap hidup meski browser
+            # sudah menutup halaman, dan lama-lama menghabiskan worker server.
+            call.cancel()
 
     return StreamingResponse(kirim_event(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
@@ -142,4 +183,6 @@ def aset_frontend(asset_path: str):
     frontend_dir = os.path.abspath(os.path.join(BASE_DIR, "frontend"))
     if not path.startswith(frontend_dir + os.sep) or not os.path.isfile(path):
         raise HTTPException(status_code=404, detail="File tidak ditemukan")
-    return FileResponse(path)
+    # Aset frontend tidak boleh dicache lama: kalau tidak, deploy berikutnya
+    # (misalnya tombol baru) tidak terlihat di HP yang sudah pernah buka web.
+    return FileResponse(path, headers={"Cache-Control": "no-cache, max-age=0"})

@@ -202,6 +202,26 @@ Benchmark lokal dijalankan dengan 160 permintaan per skenario. Hasilnya:
 
 Pada pengukuran ini, semua skenario selesai tanpa error. Latensi rata-rata dan p95 meningkat saat jumlah klien bertambah; throughput tertinggi tercatat pada 5 klien. Angka ini adalah satu kali pengukuran lokal, sehingga dapat berbeda pada perangkat atau saat pengujian diulang.
 
+## Persistensi & deploy
+
+- **Persistensi SQLite:** server menyimpan kursi, pesanan, hasil idempotensi, dan versi ke SQLite (`BIOSKOP_DB_PATH`, default `data/bioskop.db` kalau dijalankan langsung; di Docker, volume `bioskop-data` dipasang ke `/app/data`). Restart server/container tidak lagi menghapus pesanan. Tanpa variabel itu (misalnya saat tes, `LayananBioskop()` tanpa argumen), state tetap in-memory seperti sebelumnya.
+- **Kepemilikan pembatalan:** `BatalkanPesananRequest` punya field opsional `nama_pemesan`. Kalau diisi dan tidak cocok dengan nama pemesan, pembatalan ditolak ("Pesanan ini milik pemesan lain"). Frontend selalu mengirim nama dari pesanan tersimpan; client gRPC lama yang tidak mengirim nama tetap diizinkan (kompatibel ke belakang).
+- **Healthcheck:** `GET /api/health` mengembalikan `{"status": "ok", ...}` kalau gateway bisa mencapai server gRPC, 503 kalau tidak. Compose memakai endpoint ini sebagai healthcheck service `web`.
+
+### Benchmark langsung dari web (demo)
+
+Halaman utama punya section **Benchmark gRPC**: tombol "Jalankan benchmark" memanggil `POST /api/benchmark`, yang menjalankan skenario 1, 5, dan 20 client (100 request per skenario, 70% baca / 30% tulis) lalu menampilkan throughput dan latensi (rata-rata, p50, p95, p99) per skenario. Benchmark berjalan pada server gRPC terisolasi yang dibuat khusus per skenario — kursi demo, pesanan, dan database tidak berubah. Implementasinya di `benchmarks/web_benchmark.py` (murni stdlib + gRPC, tanpa numpy/matplotlib, supaya gateway tidak butuh dependensi baru); dua benchmark yang bersamaan ditolak dengan 409.
+
+### Deploy dengan Docker Compose
+
+```bash
+docker compose up --build -d
+docker compose ps          # web harus (healthy)
+curl http://localhost:8000/api/health
+```
+
+Data pesanan hidup di volume `bioskop-data` (bukan di image), jadi `docker compose down` + `up` lagi tidak menghapus pesanan. Untuk reset total: `docker compose down -v`.
+
 ## Catatan batasan prototipe
 
-Status dan deduplikasi disimpan di memori. Restart server akan menghapus pesanan dan riwayat request ID. Ini cukup untuk demo concurrency satu server; persistensi database dan deduplikasi lintas restart dapat ditambahkan sebagai pengembangan lanjutan.
+gRPC masih insecure (tanpa TLS) — wajar untuk demo di jaringan lokal, tapi jangan diekspos langsung ke internet tanpa TLS/reverse proxy. Cache dedup disimpan di SQLite, jadi tidak lagi tumbuh tanpa batas di memori, tapi tidak ada pembersihan riwayat lama.
