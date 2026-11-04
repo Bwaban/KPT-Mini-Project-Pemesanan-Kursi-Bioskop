@@ -12,6 +12,7 @@ import os
 import secrets
 import sqlite3
 import threading
+import time
 
 import grpc
 
@@ -243,10 +244,16 @@ class LayananBioskop(rpc.LayananBioskopServicer):
             return hasil
 
     def PantauKursi(self, request, context):
+        # Batas umur stream 5 menit: EventSource browser reconnect otomatis,
+        # tapi stream yang bocor (client putus tanpa cancel dari gateway)
+        # tidak bisa menumpuk selamanya dan menghabiskan worker server.
+        mulai = time.monotonic()
         with self.kondisi:
             versi_terkirim = self.versi
             yield self._snapshot()
         while context.is_active():
+            if time.monotonic() - mulai > 300:
+                return
             with self.kondisi:
                 self.kondisi.wait_for(
                     lambda: self.versi != versi_terkirim or not context.is_active(), timeout=1.0
@@ -262,7 +269,7 @@ class LayananBioskop(rpc.LayananBioskopServicer):
 
 def main():
     db_path = os.getenv("BIOSKOP_DB_PATH", "data/bioskop.db")
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=20))
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=50))
     rpc.add_LayananBioskopServicer_to_server(LayananBioskop(db_path=db_path), server)
     port = "0.0.0.0:50051"
     server.add_insecure_port(port)

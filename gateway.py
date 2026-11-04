@@ -161,13 +161,18 @@ def batalkan_pesanan(body: BatalBody):
 @app.get("/api/stream")
 def pantau_kursi():
     def kirim_event():
+        call = stub.PantauKursi(pb.PantauKursiRequest())
         try:
-            for pembaruan in stub.PantauKursi(pb.PantauKursiRequest()):
+            for pembaruan in call:
                 payload = {"kursi": serialisasi_kursi(pembaruan.kursi), "versi": pembaruan.versi}
                 yield f"id: {pembaruan.versi}\nevent: seats\ndata: {json.dumps(payload)}\n\n"
         except grpc.RpcError:
             # EventSource will reconnect and open a fresh gRPC stream.
             return
+        finally:
+            # Penting: tanpa cancel, stream server tetap hidup meski browser
+            # sudah menutup halaman, dan lama-lama menghabiskan worker server.
+            call.cancel()
 
     return StreamingResponse(kirim_event(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
