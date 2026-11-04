@@ -8,3 +8,4 @@ proto/bioskop_pb2_grpc.py
 .idea/
 .vscode/
 generated/
+data/

@@ -33,6 +33,9 @@ message PesanKursiRequest {
 message BatalkanPesananRequest {
   string request_id = 1;
   string booking_id = 2;
+  // Opsional (kompatibel ke belakang): kalau diisi, server menolak
+  // pembatalan bila namanya tidak cocok dengan nama pemesan.
+  string nama_pemesan = 3;
 }
 
 message HasilPesanResponse {

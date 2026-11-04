@@ -188,7 +188,7 @@ async function cancelBooking(booking) {
   try {
     const response = await fetch('/api/cancel', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ request_id: crypto.randomUUID(), booking_id: booking.booking_id }),
+      body: JSON.stringify({ request_id: crypto.randomUUID(), booking_id: booking.booking_id, nama_pemesan: booking.nama_pemesan || '' }),
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.detail || 'Pembatalan gagal.');

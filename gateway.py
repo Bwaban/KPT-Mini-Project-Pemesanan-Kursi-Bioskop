@@ -36,6 +36,7 @@ class PesanBanyakBody(BaseModel):
 class BatalBody(BaseModel):
     request_id: str
     booking_id: str
+    nama_pemesan: str = ""
 
 
 def panggil_dengan_retry(method, request, timeout=2.0, attempts=3):
@@ -61,6 +62,15 @@ def serialisasi_kursi(kursi):
         {"id": k.id, "baris": k.baris, "nomor": k.nomor, "tersedia": k.tersedia}
         for k in kursi
     ]
+
+
+@app.get("/api/health")
+def health():
+    try:
+        response = stub.LihatKursi(pb.LihatKursiRequest(), timeout=2.0)
+        return {"status": "ok", "kursi": len(response.kursi), "versi": response.versi}
+    except grpc.RpcError as error:
+        raise HTTPException(status_code=503, detail=f"server gRPC tidak terjangkau: {error.code().name}")
 
 
 @app.get("/")
@@ -114,7 +124,9 @@ def pesan_beberapa_kursi(body: PesanBanyakBody):
 
 @app.post("/api/cancel")
 def batalkan_pesanan(body: BatalBody):
-    request = pb.BatalkanPesananRequest(request_id=body.request_id, booking_id=body.booking_id)
+    request = pb.BatalkanPesananRequest(
+        request_id=body.request_id, booking_id=body.booking_id, nama_pemesan=body.nama_pemesan
+    )
     try:
         result = panggil_dengan_retry(stub.BatalkanPesanan, request)
         return {"sukses": result.sukses, "pesan": result.pesan, "booking_id": result.booking_id, "kursi_id": result.kursi_id}
