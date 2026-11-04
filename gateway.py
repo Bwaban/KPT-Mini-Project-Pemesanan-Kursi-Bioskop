@@ -178,4 +178,6 @@ def aset_frontend(asset_path: str):
     frontend_dir = os.path.abspath(os.path.join(BASE_DIR, "frontend"))
     if not path.startswith(frontend_dir + os.sep) or not os.path.isfile(path):
         raise HTTPException(status_code=404, detail="File tidak ditemukan")
-    return FileResponse(path)
+    # Aset frontend tidak boleh dicache lama: kalau tidak, deploy berikutnya
+    # (misalnya tombol baru) tidak terlihat di HP yang sudah pernah buka web.
+    return FileResponse(path, headers={"Cache-Control": "no-cache, max-age=0"})
